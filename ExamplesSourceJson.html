@@ -1,0 +1,187 @@
+<html>
+<head>
+  
+  <title>Google Maps Multiple Markers</title>
+  <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
+  <script src="http://code.jquery.com/jquery-1.12.1.min.js"></script>
+  <style>
+
+    #map_wrapper {
+
+        width: 100%;
+        height: 100%;
+    }
+
+    #map_canvas {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .info-box {
+        /*display: block;*/
+        min-height: 90px;
+        width: 250px;
+    }
+    .info-box-icon {
+        display: block;
+        float: left;
+        height: 90px;
+        width: 90px;
+    }
+    .info-box-icon > img {
+        max-width: 100%;
+    }
+    .info-box-content {
+        margin-left: 90px;
+        padding: 5px 10px;
+    }
+    .info-box-text {
+        display: block;
+        font-size: 12px;
+        font-weight: 400;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
+    }  
+    .info-box-desc {
+        color: #999;
+       font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
+    }
+    .info-box-number {
+        display: block;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .info-box small {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map_wrapper">
+    <div id="map_canvas"></div>
+</div>
+</div>
+<script type="text/javascript">
+    var map;
+    var bounds = new google.maps.LatLngBounds();
+    var mapOptions = {
+        mapTypeId: 'roadmap'
+    };
+                    
+    // Display a map on the page
+    map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);    
+        
+    // Multiple Markers  
+    /*var markers = [
+          {
+            "title": "BANGI DIALYSIS CENTRE SDN BHD",
+            "lat": 2.953110,
+            "lng": 101.758544,
+            "description": "Copenhagen is the capital of Denmark and its most populous city",
+            "img":"image-120x120.jpg"
+          },
+          {
+            "title": "IBNU AL-NAFIS DIALYSIS CENTRE",
+            "lat": 2.937601,
+            "lng": 101.774852,
+            "description": "Copenhagen is the capital of Denmark and its most populous city",
+            "img":"image-120x120.jpg"
+          },
+          {
+            "title": "SURIYA DIALYSIS CENTRE",
+            "lat": 2.963048,
+            "lng": 101.750985,
+            "description": "Copenhagen is the capital of Denmark and its most populous city",
+            "img":"image-120x120.jpg"
+          },
+          {
+            "title": "PUSAT RAWATAN DIALISIS HIDAYAH SDN BHD",
+            "lat": 2.939920,
+            "lng": 101.675552,
+            "description": "Copenhagen is the capital of Denmark and its most populous city",
+            "img":"image-120x120.jpg"
+          },
+          {
+            "title": "BSC MEDI VENTURE SDN. BHD.",
+            "lat": 2.990127,
+            "lng": 101.777069,
+            "description": "Copenhagen is the capital of Denmark and its most populous city",
+            "img":"image-120x120.jpg"
+          },
+          {
+            "title": "KPJ KAJANG SPECIALIST HOSPITAL SDN BHD",
+            "lat": 2.999896,
+            "lng": 101.785752,
+            "description": "Copenhagen is the capital of Denmark and its most populous city",
+            "img":"image-120x120.jpg"
+          }
+        ];*/
+
+        // Multiple Markers  From Ajax load Json format
+        var markers = (function () { 
+            var json = []; 
+            $.ajax({                 
+                'url': "source.html", //put in url data json sorce 
+                'dataType': "json", 
+                async: false,
+                'success': function (data) {
+                     json = data.markers;                      
+                 }
+            });
+            return json;
+        })();
+    
+    // Display multiple markers on a map
+    var infoWindow = new google.maps.InfoWindow(), marker, i;
+
+    // Loop through our array of markers & place each one on the map  
+    var markersLength = markers.length;    
+    for( i = 0; i < markersLength; i++ ) {          
+        var position = new google.maps.LatLng(markers[i].lat, markers[i].lng);
+        bounds.extend(position);
+        marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            title: markers[i].title,
+            description: markers[i].description,
+            img: markers[i].img,
+        });        
+
+        
+        // Allow each marker to have an info window    
+        google.maps.event.addListener(marker, 'click', (function(marker, i) {
+          
+          // Info Window Content
+          var infoWindowContent = 
+            '<div class="info-box">' +
+              '<span class="info-box-icon"><img src="'+marker.img+'"></span>'+
+              '<div class="info-box-content">'+
+                '<span class="info-box-text">'+marker.title+'</span>'+
+                '<span class="info-box-desc">'+marker.description+'</span>'+
+              '</div>'+
+            '</div>';            
+
+            return function() {
+                infoWindow.setContent(infoWindowContent);
+                infoWindow.open(map, marker);
+            }
+        })(marker, i));
+
+        // Automatically center the map fitting all markers on the screen
+        map.fitBounds(bounds);
+    }
+
+    // Override our map zoom level once our fitBounds function runs (Make sure it only runs once)
+    var boundsListener = google.maps.event.addListener((map), 'bounds_changed', function(event) {
+        this.setZoom(12);
+        google.maps.event.removeListener(boundsListener);
+    });
+
+  </script>
+</body>
+</html>
